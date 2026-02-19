@@ -1,0 +1,7 @@
+pyTelegramBotAPI
+flask
+pymongo
+requests
+gunicorn
+Pillow
+pytz
