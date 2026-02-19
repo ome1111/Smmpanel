@@ -4,242 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ULTIMATE SMM ADMIN</title>
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --bg-dark: #0f172a;       /* Deep Navy */
-            --card-bg: #1e293b;       /* Lighter Navy */
-            --neon-blue: #38bdf8;     /* Cyan */
-            --neon-green: #22c55e;    /* Green */
-            --neon-red: #ef4444;      /* Red */
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-dark: #0f172a; --card-bg: #1e293b; --neon-blue: #38bdf8;
+            --neon-green: #22c55e; --neon-red: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8;
         }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: 'Rajdhani', sans-serif;
-            overflow-x: hidden;
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            height: 100vh;
-            width: 260px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 20px;
-            z-index: 1000;
-        }
-        
-        .nav-link {
-            color: var(--text-muted);
-            padding: 15px 25px;
-            font-size: 1.1rem;
-            transition: 0.3s;
-            border-left: 3px solid transparent;
-        }
-        
-        .nav-link:hover, .nav-link.active {
-            color: var(--neon-blue);
-            background: rgba(56, 189, 248, 0.05);
-            border-left: 3px solid var(--neon-blue);
-        }
-
-        /* Main Content Area */
-        .main-content {
-            margin-left: 260px;
-            padding: 30px;
-        }
-
-        /* Stats Cards */
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
-            border-color: rgba(56, 189, 248, 0.3);
-        }
-        
-        .stat-title { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .stat-value { font-size: 2.5rem; font-weight: 700; color: var(--text-main); margin-top: 10px; }
-        .icon-bg { position: absolute; right: 20px; bottom: 20px; font-size: 3rem; opacity: 0.05; }
-
-        /* Forms & Inputs */
-        .form-control, .form-control:focus {
-            background: #020617;
-            border: 1px solid #334155;
-            color: #fff;
-        }
-        .btn-neon {
-            background: var(--neon-blue);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
-        }
-        .btn-neon:hover { background: #0ea5e9; color: #fff; }
-
-        /* User Table */
-        .table-container {
-            background: var(--card-bg);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden;
-        }
-        .table-dark { --bs-table-bg: var(--card-bg); }
-        th { color: var(--neon-blue); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-        td { vertical-align: middle; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .sidebar { width: 70px; padding-top: 10px; }
-            .sidebar span { display: none; }
-            .main-content { margin-left: 70px; padding: 15px; }
-            .stat-value { font-size: 1.8rem; }
-        }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Rajdhani', sans-serif; }
+        .sidebar { height: 100vh; width: 260px; position: fixed; top: 0; left: 0; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border-right: 1px solid rgba(255, 255, 255, 0.05); padding-top: 20px; z-index: 1000; }
+        .nav-link { color: var(--text-muted); padding: 15px 25px; transition: 0.3s; border-left: 3px solid transparent; text-decoration: none; display: block; }
+        .nav-link:hover, .nav-link.active { color: var(--neon-blue); background: rgba(56, 189, 248, 0.05); border-left: 3px solid var(--neon-blue); }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .stat-card { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; position: relative; transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--neon-blue); }
+        .stat-value { font-size: 2rem; font-weight: 700; margin-top: 10px; }
+        .table-container { background: var(--card-bg); border-radius: 15px; padding: 20px; }
+        .btn-neon { background: var(--neon-blue); color: #000; font-weight: bold; border: none; }
+        @media (max-width: 768px) { .sidebar { width: 70px; } .sidebar span { display: none; } .main-content { margin-left: 70px; } }
     </style>
 </head>
 <body>
 
     <div class="sidebar d-flex flex-column">
-        <h3 class="text-center mb-5" style="color: var(--neon-blue); letter-spacing: 2px;">
-            <i class="fa-solid fa-robot"></i> <span>ADMIN</span>
-        </h3>
+        <h3 class="text-center mb-5" style="color: var(--neon-blue);"><i class="fa-solid fa-robot"></i> <span>ADMIN</span></h3>
         <ul class="nav flex-column">
-            <li class="nav-item">
-                <a href="#" class="nav-link active"><i class="fa-solid fa-chart-pie me-2"></i> <span>Dashboard</span></a>
-            </li>
-            <li class="nav-item">
-                <a href="#users" class="nav-link"><i class="fa-solid fa-users me-2"></i> <span>User Manager</span></a>
-            </li>
-            <li class="nav-item">
-                <a href="#broadcast" class="nav-link"><i class="fa-solid fa-bullhorn me-2"></i> <span>Broadcast</span></a>
-            </li>
+            <a href="/admin" class="nav-link active"><i class="fa-solid fa-chart-pie me-2"></i> <span>Dashboard</span></a>
+            <a href="#broadcast" class="nav-link"><i class="fa-solid fa-bullhorn me-2"></i> <span>Broadcast</span></a>
+            <a href="/logout" class="nav-link text-danger mt-5"><i class="fa-solid fa-power-off me-2"></i> <span>LOGOUT</span></a>
         </ul>
-        <div class="mt-auto mb-4">
-            <a href="/logout" class="nav-link text-danger text-center">
-                <i class="fa-solid fa-power-off me-2"></i> <span>LOGOUT</span>
-            </a>
-        </div>
     </div>
 
     <div class="main-content">
-        
         <div class="d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h2 class="fw-bold text-white">Dashboard Overview</h2>
-                <p class="text-muted">Live control panel for your SMM Business.</p>
-            </div>
-            <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle fa-xs me-2"></i> SYSTEM ONLINE</span>
+            <div><h2 class="fw-bold">Dashboard Overview</h2><p class="text-muted">Live control panel for SMM Business.</p></div>
+            <span class="badge bg-success px-3 py-2 rounded-pill">SYSTEM ONLINE</span>
         </div>
 
         <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <span class="stat-title">Total Users</span>
-                    <div class="stat-value">{{ stats.users }}</div>
-                    <i class="fa-solid fa-users icon-bg text-primary"></i>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <span class="stat-title">Total Orders</span>
-                    <div class="stat-value">{{ stats.orders }}</div>
-                    <i class="fa-solid fa-cart-shopping icon-bg text-warning"></i>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card" style="border-bottom: 3px solid var(--neon-green);">
-                    <span class="stat-title">Total Revenue</span>
-                    <div class="stat-value text-success">${{ stats.revenue }}</div>
-                    <i class="fa-solid fa-sack-dollar icon-bg text-success"></i>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <span class="stat-title">API Status</span>
-                    <div class="stat-value text-info" style="font-size: 1.5rem; margin-top: 15px;">{{ stats.api_status }}</div>
-                    <i class="fa-solid fa-server icon-bg text-info"></i>
-                </div>
-            </div>
+            <div class="col-md-3"><div class="stat-card"><span class="stat-title text-muted">Total Users</span><div class="stat-value">{{ stats.users }}</div></div></div>
+            <div class="col-md-3"><div class="stat-card"><span class="stat-title text-muted">Total Orders</span><div class="stat-value">{{ stats.orders }}</div></div></div>
+            <div class="col-md-3"><div class="stat-card" style="border-bottom: 3px solid var(--neon-green);"><span class="stat-title text-muted">Revenue</span><div class="stat-value text-success">${{ stats.revenue }}</div></div></div>
+            <div class="col-md-3"><div class="stat-card"><span class="stat-title text-muted">API Balance</span><div class="stat-value text-info" style="font-size: 1.2rem;">{{ stats.api_bal }}</div></div></div>
         </div>
 
-        <div class="row mb-5" id="broadcast">
-            <div class="col-12">
-                <div class="stat-card">
-                    <h5 class="mb-4 text-white"><i class="fa-solid fa-paper-plane me-2 text-info"></i> Send Global Broadcast</h5>
-                    <form action="/send_broadcast" method="POST">
-                        <div class="mb-3">
-                            <textarea name="msg" class="form-control" rows="3" placeholder="Write your message here (Markdown supported)..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-neon px-4">
-                            <i class="fa-solid fa-rocket me-2"></i> Send to All Users
-                        </button>
-                    </form>
-                </div>
-            </div>
+        <div class="stat-card mb-5" id="broadcast">
+            <h5 class="mb-4 text-white"><i class="fa-solid fa-paper-plane me-2 text-info"></i> Send Global Broadcast</h5>
+            <form action="/send_broadcast" method="POST">
+                <textarea name="msg" class="form-control bg-dark text-white border-secondary mb-3" rows="3" placeholder="Message to all users..." required></textarea>
+                <button type="submit" class="btn btn-neon w-100 py-3">SEND BROADCAST</button>
+            </form>
         </div>
 
-        <div class="table-container p-4" id="users">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="text-white m-0"><i class="fa-solid fa-list me-2"></i> Recent Users</h5>
-                <input type="text" id="searchInput" class="form-control w-25" placeholder="Search user..." onkeyup="searchTable()">
+        <div class="table-container">
+            <div class="d-flex justify-content-between mb-4">
+                <h5>Recent Users</h5>
+                <input type="text" id="searchInput" class="form-control w-25 bg-dark text-white border-secondary" placeholder="Search by ID..." onkeyup="searchTable()">
             </div>
-            
             <div class="table-responsive">
-                <table class="table table-dark table-hover mb-0" id="userTable">
+                <table class="table table-dark table-hover" id="userTable">
                     <thead>
                         <tr>
                             <th>User ID</th>
-                            <th>Name</th>
-                            <th>Current Balance</th>
+                            <th>Balance</th>
                             <th>Total Spent</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for user in users %}
                         <tr>
-                            <td><span class="text-muted">#{{ user._id }}</span></td>
                             <td>
-                                <img src="https://ui-avatars.com/api/?name={{ user.name }}&background=random&color=fff" class="rounded-circle me-2" width="30">
-                                {{ user.name }}
+                                <img src="https://ui-avatars.com/api/?name={{ user._id }}&background=random&color=fff" class="rounded-circle me-2" width="25">
+                                <span class="text-info">{{ user._id }}</span>
                             </td>
-                            <td>
-                                <span class="fw-bold text-success">${{ "%.2f"|format(user.balance) }}</span>
-                            </td>
-                            <td>${{ "%.2f"|format(user.spent) }}</td>
+                            <td><span class="text-success font-bold">${{ user.balance }}</span></td>
+                            <td>${{ user.spent or 0 }}</td>
                             <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    
-                                    <form action="/add_balance/{{ user._id }}" method="POST" class="d-flex">
-                                        <input type="number" name="amount" step="0.01" class="form-control form-control-sm" style="width: 80px;" placeholder="$ Amount" required>
-                                        <button type="submit" class="btn btn-sm btn-outline-success ms-1" title="Add Funds">
-                                            <i class="fa-solid fa-plus"></i>
-                                        </button>
-                                    </form>
-
-                                    <a href="/ban_user/{{ user._id }}" class="btn btn-sm btn-outline-danger" title="Ban User" onclick="return confirm('Are you sure you want to BAN this user?');">
-                                        <i class="fa-solid fa-ban"></i>
-                                    </a>
-                                </div>
+                                <form action="/add_balance/{{ user._id }}" method="POST" class="d-inline-flex gap-1">
+                                    <input type="number" name="amount" step="0.01" class="form-control form-control-sm" style="width: 70px;" placeholder="$" required>
+                                    <button type="submit" class="btn btn-sm btn-success"><i class="fa-solid fa-plus"></i></button>
+                                </form>
+                                <a href="/ban_user/{{ user._id }}" class="btn btn-sm btn-outline-danger ms-2"><i class="fa-solid fa-ban"></i></a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -247,29 +95,21 @@
                 </table>
             </div>
         </div>
-
     </div>
 
     <script>
         function searchTable() {
-            var input, filter, table, tr, td, i, txtValue;
-            input = document.getElementById("searchInput");
-            filter = input.value.toUpperCase();
-            table = document.getElementById("userTable");
-            tr = table.getElementsByTagName("tr");
-            for (i = 0; i < tr.length; i++) {
-                td = tr[i].getElementsByTagName("td")[1]; // Search by Name
+            var input = document.getElementById("searchInput");
+            var filter = input.value.toUpperCase();
+            var tr = document.getElementById("userTable").getElementsByTagName("tr");
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName("td")[0];
                 if (td) {
-                    txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }       
+                    if (td.innerText.toUpperCase().indexOf(filter) > -1) tr[i].style.display = "";
+                    else tr[i].style.display = "none";
+                }
             }
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
