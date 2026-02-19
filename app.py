@@ -1,119 +1,160 @@
-from flask import Flask, request, render_template, session, redirect, url_for
-import telebot
-from telebot import types
 import os
 import threading
+import time
 from datetime import datetime
 
-# আপনার অন্য ফাইলগুলো থেকে প্রয়োজনীয় সবকিছু ইম্পোর্ট করা হচ্ছে
+# Flask ও অন্যান্য ওয়েব কম্পোনেন্ট
+from flask import Flask, request, render_template, session, redirect, url_for, flash, jsonify
+import telebot
+from telebot import types
+
+# আপনার নিজস্ব মডিউলগুলো
 from config import BOT_TOKEN, ADMIN_PASSWORD, SECRET_KEY, ADMIN_ID
 from loader import bot, users_col, orders_col, trx_col
-import handlers  # এটি আপনার বটের মেসেজ হ্যান্ডলারগুলো সচল রাখবে
-import api       # এটি 1xPanel API কানেকশন সামলাবে
+import handlers  # এটি বটের সব কমান্ড হ্যান্ডল করবে
+import api       # 1xPanel API কানেকশন
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 # ---------------------------------------------------------------------
-# ১. অ্যাডমিন ড্যাশবোর্ড লজিক (WEB ADMIN PANEL)
+# ১. হোমপেজ এবং স্ট্যাটাস চেক (Index Route)
+# ---------------------------------------------------------------------
+
+@app.route("/")
+def index():
+    """সার্ভার রান হচ্ছে কি না তা চেক করার জন্য মেইন পেজ"""
+    render_url = os.environ.get('RENDER_EXTERNAL_URL', 'Your Render URL')
+    
+    # অটোমেটিক ওয়েবহুক সেট করার চেষ্টা করবে যখনই কেউ হোমপেজে আসবে
+    try:
+        bot.remove_webhook()
+        time.sleep(1)
+        bot.set_webhook(url=f"{render_url.rstrip('/')}/{BOT_TOKEN}")
+        status = "Webhook Connected ✅"
+    except Exception as e:
+        status = f"Webhook Error: {e} ❌"
+
+    return render_template('index.html', status=status, url=render_url)
+
+# ---------------------------------------------------------------------
+# ২. অ্যাডমিন লগইন ও সিকিউরিটি (Admin Authentication)
 # ---------------------------------------------------------------------
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # এখানে পাসওয়ার্ড চেক করা হয় (যা আপনি Render Env এ দিয়েছেন)
-        if request.form.get('password') == ADMIN_PASSWORD:
+        entered_password = request.form.get('password')
+        if entered_password == ADMIN_PASSWORD:
             session['logged_in'] = True
+            session['login_time'] = str(datetime.now())
             return redirect(url_for('admin_dashboard'))
-        return render_template('login.html', error="Invalid Security Code!")
+        else:
+            flash("Invalid Security Code! Try again.", "danger")
+            return render_template('login.html', error="Wrong Password")
     return render_template('login.html')
-
-@app.route('/admin')
-def admin_dashboard():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    
-    # ডাটাবেস থেকে রিয়েল-টাইম তথ্য সংগ্রহ
-    total_users = users_col.count_documents({})
-    total_orders = orders_col.count_documents({})
-    
-    # মোট কত টাকা খরচ হয়েছে (Revenue) তা ক্যালকুলেট করা
-    all_users = list(users_col.find().sort("joined_at", -1))
-    revenue = sum(u.get('spent', 0) for u in all_users)
-    
-    # API ব্যালেন্স চেক (1xPanel থেকে)
-    try:
-        api_bal = api.get_balance()
-        api_status = f"ONLINE (${api_bal})"
-    except:
-        api_status = "OFFLINE 🔴"
-
-    stats = {
-        'users': total_users,
-        'orders': total_orders,
-        'revenue': round(revenue, 2),
-        'api_status': api_status
-    }
-    
-    # ড্যাশবোর্ডে শেষ ৫০ জন ইউজারের লিস্ট পাঠানো হচ্ছে
-    return render_template('admin.html', stats=stats, users=all_users[:50])
 
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('login'))
 
-# --- ব্রডকাস্ট (ওয়েব প্যানেল থেকে সবাইকে মেসেজ পাঠানো) ---
+# ---------------------------------------------------------------------
+# ৩. অ্যাডমিন ড্যাশবোর্ড লজিক (The Master Control)
+# ---------------------------------------------------------------------
+
+@app.route('/admin')
+def admin_dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    
+    # ডাটাবেস থেকে রিয়েল-টাইম ডাটা সংগ্রহ
+    try:
+        total_users = users_col.count_documents({})
+        total_orders = orders_col.count_documents({})
+        recent_users = list(users_col.find().sort("joined_at", -1).limit(100))
+        
+        # ক্যালকুলেশন: মোট ইনকাম ও ইউজারের খরচ
+        total_revenue = sum(u.get('spent', 0) for u in users_col.find())
+        total_wallet_balance = sum(u.get('balance', 0) for u in users_col.find())
+        
+        # API ব্যালেন্স চেক
+        api_balance = api.get_balance()
+    except Exception as e:
+        print(f"Dashboard Data Error: {e}")
+        total_users = 0
+        total_orders = 0
+        recent_users = []
+        total_revenue = 0
+        total_wallet_balance = 0
+        api_balance = "N/A"
+
+    stats = {
+        'users': total_users,
+        'orders': total_orders,
+        'revenue': round(total_revenue, 2),
+        'wallet': round(total_wallet_balance, 2),
+        'api_bal': api_balance,
+        'time': datetime.now().strftime("%I:%M %p")
+    }
+    
+    return render_template('admin.html', stats=stats, users=recent_users)
+
+# ---------------------------------------------------------------------
+# ৪. ইউজার ম্যানেজমেন্ট অ্যাকশন (Web Actions)
+# ---------------------------------------------------------------------
+
+@app.route('/add_balance/<int:user_id>', methods=['POST'])
+def add_balance_web(user_id):
+    if not session.get('logged_in'): return redirect(url_for('login'))
+    
+    amount = float(request.form.get('amount', 0))
+    if amount > 0:
+        users_col.update_one({"_id": user_id}, {"$inc": {"balance": amount}})
+        # ইউজারকে টেলিগ্রামে নোটিফাই করা
+        try:
+            bot.send_message(user_id, f"💳 **Deposit Successful!**\nAdmin added **${amount}** to your account. 🚀", parse_mode="Markdown")
+        except: pass
+        flash(f"Added ${amount} to User {user_id}", "success")
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/ban_user/<int:user_id>')
+def ban_user(user_id):
+    if not session.get('logged_in'): return redirect(url_for('login'))
+    
+    # ব্যালেন্স -৯৯৯৯৯ করে ইউজারকে ইনঅ্যাক্টিভ করা
+    users_col.update_one({"_id": user_id}, {"$set": {"is_banned": True, "balance": -99999}})
+    flash(f"User {user_id} has been BANNED.", "warning")
+    return redirect(url_for('admin_dashboard'))
+
+# ---------------------------------------------------------------------
+# ৫. ব্রডকাস্ট সিস্টেম (Broadcast to All Users)
+# ---------------------------------------------------------------------
+
 @app.route('/send_broadcast', methods=['POST'])
 def send_broadcast():
     if not session.get('logged_in'): return redirect(url_for('login'))
     
     msg_text = request.form.get('msg')
-    users = users_col.find({})
     
-    def run_broadcast():
-        for user in users:
+    def broadcast_task(text):
+        all_users = users_col.find({})
+        count = 0
+        for user in all_users:
             try:
-                bot.send_message(user['_id'], f"📢 **ADMIN MESSAGE**\n\n{msg_text}", parse_mode="Markdown")
+                bot.send_message(user['_id'], f"📢 **IMPORTANT ANNOUNCEMENT**\n\n{text}", parse_mode="Markdown")
+                count += 1
+                time.sleep(0.1) # টেলিগ্রাম লিমিট এড়াতে ছোট বিরতি
             except:
-                pass # ব্লকড ইউজারদের জন্য স্কিপ করবে
-    
-    # ব্যাকগ্রাউন্ডে ব্রডকাস্ট চলবে যাতে ওয়েব পেজ হ্যাং না হয়
-    threading.Thread(target=run_broadcast).start()
-    return redirect(url_for('admin_dashboard'))
+                continue
+        print(f"Broadcast finished. Sent to {count} users.")
 
-# --- ইউজারকে ব্যালেন্স দেওয়া (Web Action) ---
-@app.route('/add_balance/<int:user_id>', methods=['POST'])
-def add_balance_web(user_id):
-    if not session.get('logged_in'): return redirect(url_for('login'))
-    
-    try:
-        amount = float(request.form.get('amount'))
-        users_col.update_one({"_id": user_id}, {"$inc": {"balance": amount}})
-        
-        # ইউজারকে নোটিফিকেশন পাঠানো
-        bot.send_message(user_id, f"💰 **Admin added ${amount} to your wallet!**\nHappy Ordering! 🚀")
-    except:
-        pass
-        
-    return redirect(url_for('admin_dashboard'))
-
-# --- ইউজার ব্যান করা ---
-@app.route('/ban_user/<int:user_id>')
-def ban_user(user_id):
-    if not session.get('logged_in'): return redirect(url_for('login'))
-    
-    # ইউজারের ব্যালেন্স লক করা (ব্যান করার একটি উপায়)
-    users_col.update_one({"_id": user_id}, {"$set": {"balance": -999999}})
-    try:
-        bot.send_message(user_id, "🚫 **Your account has been BANNED by the Admin.**")
-    except:
-        pass
-    
+    threading.Thread(target=broadcast_task, args=(msg_text,)).start()
+    flash("Broadcast started in background...", "info")
     return redirect(url_for('admin_dashboard'))
 
 # ---------------------------------------------------------------------
-# ২. টেলিগ্রাম ওয়েবহুক সেটিংস (BOT CONNECTION)
+# ৬. টেলিগ্রাম ওয়েবহুক রিসিভার (Telegram Webhook)
 # ---------------------------------------------------------------------
 
 @app.route('/' + BOT_TOKEN, methods=['POST'])
@@ -124,30 +165,15 @@ def getMessage():
         bot.process_new_updates([update])
         return "OK", 200
     else:
-        return "Forbidden", 403
-
-@app.route("/")
-def index():
-    # এটি আপনার বটের হোমপেজ এবং এটি অটোমেটিক ওয়েবহুক সেট করবে
-    bot.remove_webhook()
-    render_url = os.environ.get('RENDER_EXTERNAL_URL')
-    
-    if render_url:
-        # শেষে স্ল্যাশ থাকলে তা সরিয়ে ফেলা হচ্ছে সেফটির জন্য
-        clean_url = render_url.rstrip('/')
-        bot.set_webhook(url=f"{clean_url}/{BOT_TOKEN}")
-        return f"<body style='background:#0f172a; color:white; text-align:center; padding-top:100px; font-family:sans-serif;'>" \
-               f"<h1 style='color:#38bdf8;'>🚀 SMM Bot System is ONLINE!</h1>" \
-               f"<p>Connected to Telegram Webhook successfully.</p>" \
-               f"<p>Webhook URL: {clean_url}</p></body>", 200
-    else:
-        return "❌ ERROR: RENDER_EXTERNAL_URL is not set in Environment Variables!", 500
+        return "Access Denied", 403
 
 # ---------------------------------------------------------------------
-# ৩. সার্ভার রান করা
+# ৭. সার্ভার এবং পোর্ট সেটিংস (Render Deployment Fix)
 # ---------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # Render পোর্ট ম্যানেজমেন্ট
+    # Render অটোমেটিক PORT এনভায়রনমেন্ট ভেরিয়েবল প্রদান করে
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    
+    # মাল্টি-থ্রেডিং সাপোর্ট সহ ফ্লাস্ক রান করা
+    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
