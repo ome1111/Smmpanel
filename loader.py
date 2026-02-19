@@ -3,37 +3,35 @@ from pymongo import MongoClient
 import os
 from config import BOT_TOKEN, MONGO_URL
 
-# শুরুতে সব ভেরিয়েবল খালি (None) হিসেবে ডিফাইন করা হলো
+# ১. ভেরিয়েবলগুলো আগে থেকেই ডিফাইন করে রাখা (যাতে app.py এরর না দেয়)
 bot = None
 users_col = None
 orders_col = None
 trx_col = None
 
-# --- বোট সেটআপ ---
-if BOT_TOKEN and ":" in BOT_TOKEN:
+print("🔍 Checking Environment Variables...")
+
+# ২. বোট চেক
+if not BOT_TOKEN or ":" not in BOT_TOKEN:
+    print("❌ CRITICAL ERROR: BOT_TOKEN is missing or invalid in Render Settings!")
+else:
     try:
         bot = telebot.TeleBot(BOT_TOKEN, parse_mode="Markdown")
-        print("✅ Bot Initialization Successful.")
+        print("✅ Bot is ready.")
     except Exception as e:
         print(f"❌ Bot Error: {e}")
-else:
-    print("❌ ERROR: BOT_TOKEN missing or invalid format (needs ':')")
 
-# --- ডাটাবেস সেটআপ ---
-if MONGO_URL and "mongodb" in MONGO_URL:
+# ৩. ডাটাবেস চেক
+if not MONGO_URL or "mongodb" not in MONGO_URL:
+    print("❌ CRITICAL ERROR: MONGO_URL is missing or invalid in Render Settings!")
+else:
     try:
         client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)
         db = client['ultimate_smm_bot']
-        
-        # কালেকশনগুলো ডিফাইন করা হলো
         users_col = db['users']
         orders_col = db['orders']
         trx_col = db['transactions']
-        
-        # চেক করা হচ্ছে কানেকশন কাজ করছে কি না
         client.admin.command('ping')
-        print("✅ MongoDB Connected Successfully.")
+        print("✅ MongoDB is ready.")
     except Exception as e:
-        print(f"❌ Database Connection Error: {e}")
-else:
-    print("❌ ERROR: MONGO_URL missing or invalid format!")
+        print(f"❌ Database Error: {e}")
